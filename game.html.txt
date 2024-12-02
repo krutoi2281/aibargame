@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knife Hit Game</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f3f4f6;
+    }
+
+    canvas {
+      border: 1px solid black;
+      background-color: #fff;
+    }
+
+    #score {
+      position: absolute;
+      top: 20px;
+      font-size: 24px;
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    #startButton {
+      position: absolute;
+      bottom: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #startButton:active {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <button id="startButton">Start Game</button>
+  <canvas id="gameCanvas" width="300" height="400"></canvas>
+
+  <script>
+    // Получение элементов
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+    const startButton = document.getElementById("startButton");
+
+    // Переменные игры
+    let score = 0;
+    let knives = 3; // количество ножей
+    let isGameOver = false;
+    let knifeX, knifeY, knifeAngle = 0;
+
+    // Вращающаяся мишень
+    const target = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 40,
+      angle: 0,
+    };
+
+    // Функция для обновления счета
+    function updateScore() {
+      scoreElement.textContent = `Score: ${score}`;
+    }
+
+    // Функция для рисования ножа
+    function drawKnife() {
+      ctx.save();
+      ctx.translate(knifeX, knifeY);
+      ctx.rotate(knifeAngle);
+      ctx.fillStyle = "#f44336";
+      ctx.fillRect(-5, -20, 10, 40);
+      ctx.restore();
+    }
+
+    // Функция для рисования мишени
+    function drawTarget() {
+      ctx.save();
+      ctx.translate(target.x, target.y);
+      ctx.rotate(target.angle);
+      ctx.fillStyle = "#4CAF50";
+      ctx.beginPath();
+      ctx.arc(0, 0, target.radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Функция для обновления состояния игры
+    function updateGame() {
+      if (isGameOver) return;
+
+      // Очистка экрана
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Рисование мишени
+      drawTarget();
+
+      // Рисование ножа
+      drawKnife();
+
+      // Обновление угла мишени
+      target.angle += 0.02;
+
+      // Проверка на попадание ножа
+      if (Math.abs(knifeX - target.x) < target.radius && Math.abs(knifeY - target.y) < target.radius) {
+        score += 1;
+        knives -= 1;
+        updateScore();
+
+        if (knives === 0) {
+          isGameOver = true;
+          alert("Game Over! Final Score: " + score);
+        }
+      }
+    }
+
+    // Настройка для начала игры
+    function startGame() {
+      score = 0;
+      knives = 3;
+      isGameOver = false;
+      target.angle = 0;
+      updateScore();
+      startButton.style.display = "none"; // Скрыть кнопку старта
+
+      // Инициализация позиции ножа
+      knifeX = canvas.width / 2;
+      knifeY = canvas.height - 20;
+
+      // Запуск игрового цикла
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Игровой цикл
+    function gameLoop() {
+      updateGame();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Управление для мобильных устройств
+    canvas.addEventListener("touchstart", (e) => {
+      if (isGameOver) return;
+
+      // Рассчитываем угол для метания ножа в точку касания экрана
+      const touch = e.touches[0];
+      knifeAngle = Math.atan2(touch.clientY - knifeY, touch.clientX - knifeX);
+      knifeX = touch.clientX - canvas.offsetLeft;
+      knifeY = touch.clientY - canvas.offsetTop;
+    });
+
+    // Кнопка старта
+    startButton.addEventListener("click", startGame);
+
+  </script>
+</body>
+</html>
